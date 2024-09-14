@@ -1,1 +1,1 @@
-# Snal - Stupid Netwrok Analysis
+# Snal - Netwrok Analysis
