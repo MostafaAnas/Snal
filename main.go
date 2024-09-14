@@ -2,42 +2,31 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"os"
-	"time"
+
+	probing "github.com/prometheus-community/pro-bing"
 )
 
-func ping(host string){
-	start := time.Now()
-	conn , err := net.Dial("ip4:icmp", host)
+func ping(host string) {
+	
+	pinger, err := probing.NewPinger(host)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
+		panic(err)
 	}
-
-	defer conn.Close()
-
-	// Send ping request
-	_ , err = conn.Write([]byte("ping"))
+	pinger.SetPrivileged(true) 
+	// TODO: paramartize count
+	pinger.Count = 3
+	err = pinger.Run() // Blocks until finished.
 	if err != nil {
-		fmt.Printf("Error sending ping: %s\n", err)
-		return
+		panic(err)
 	}
-
-	// Wait for response
-	_, err = conn.Read(make([]byte, 512))
-	if err != nil {
-		fmt.Printf("Error reading response: %s\n", err)
-		return
-	}
-
-	elapsed := time.Since(start)
-	fmt.Printf("Ping to %s took %s", host , elapsed)
+	stats := pinger.Statistics() // get send/receive/duplicate/rtt stats
+	fmt.Print(stats)
 }
 
-func main(){
-	if len(os.Args) < 2{
-	    fmt.Println("Usage: snal <host>")
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: snal <host>")
 		return
 	}
 
